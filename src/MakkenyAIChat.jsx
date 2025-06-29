@@ -25,6 +25,15 @@ const MakkenyAIChat = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Apply dark mode to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
+
   const callOpenRouterAPI = async (message) => {
     try {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -40,7 +49,7 @@ const MakkenyAIChat = () => {
           messages: [
             {
               role: 'system',
-              content: 'أنت مساعد ذكي لمنصة Makkeny للتطوير المهني والتدريب. ساعد المستخدمين في استفساراتهم حول التطوير المهني والتدريب.'
+              content: 'أنت مساعد ذكي لمنصة Makkeny للتطوير المهني والتدريب. ساعد المستخدمين في استفساراتهم حول التطوير المهني والتدريب بطريقة مفيدة ومهنية.'
             },
             ...messages.map(msg => ({
               role: msg.type === 'user' ? 'user' : 'assistant',
@@ -81,11 +90,17 @@ const MakkenyAIChat = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText('');
     setIsLoading(true);
 
+    // Update chat history with message count
+    setChatHistory(prev => prev.map(chat => 
+      chat.active ? { ...chat, messages: chat.messages + 1 } : chat
+    ));
+
     try {
-      const aiResponse = await callOpenRouterAPI(inputText);
+      const aiResponse = await callOpenRouterAPI(currentInput);
       const assistantMessage = {
         id: Date.now() + 1,
         type: 'assistant',
@@ -93,8 +108,13 @@ const MakkenyAIChat = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMessage]);
-    // eslint-disable-next-line no-unused-vars
+      
+      // Update chat history with AI response count
+      setChatHistory(prev => prev.map(chat => 
+        chat.active ? { ...chat, messages: chat.messages + 1 } : chat
+      ));
     } catch (error) {
+      console.error('Error sending message:', error);
       const errorMessage = {
         id: Date.now() + 1,
         type: 'assistant',
@@ -134,13 +154,27 @@ const MakkenyAIChat = () => {
   };
 
   const deleteChat = (chatId) => {
-    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
-    if (chatHistory.find(chat => chat.id === chatId && chat.active)) {
+    setChatHistory(prev => {
+      const filteredChats = prev.filter(chat => chat.id !== chatId);
+      if (filteredChats.length === 0) {
+        // If no chats left, create a new one
+        return [{
+          id: Date.now(),
+          title: 'محادثة جديدة',
+          messages: 0,
+          active: true
+        }];
+      }
+      return filteredChats;
+    });
+    
+    const deletedChat = chatHistory.find(chat => chat.id === chatId);
+    if (deletedChat && deletedChat.active) {
       const remainingChats = chatHistory.filter(chat => chat.id !== chatId);
       if (remainingChats.length > 0) {
         selectChat(remainingChats[0].id);
       } else {
-        startNewChat();
+        setMessages([]);
       }
     }
   };
@@ -150,9 +184,11 @@ const MakkenyAIChat = () => {
   };
 
   const finishEditingChat = (chatId, newTitle) => {
-    setChatHistory(prev => prev.map(chat => 
-      chat.id === chatId ? { ...chat, title: newTitle } : chat
-    ));
+    if (newTitle.trim()) {
+      setChatHistory(prev => prev.map(chat => 
+        chat.id === chatId ? { ...chat, title: newTitle.trim() } : chat
+      ));
+    }
     setEditingChat(null);
   };
 
@@ -176,8 +212,7 @@ const MakkenyAIChat = () => {
           <div className="header">
             <div className="logo-container">
               <div className="logo">
-                
-                 <Bot className="icon" />
+                <Bot className="icon" />
               </div>
               <span className="title">Makkeny AI</span>
             </div>
@@ -233,6 +268,7 @@ const MakkenyAIChat = () => {
                       startEditingChat(chat.id);
                     }}
                     className="action-button"
+                    title="تعديل العنوان"
                   >
                     <Edit3 className="icon" />
                   </button>
@@ -242,6 +278,7 @@ const MakkenyAIChat = () => {
                       deleteChat(chat.id);
                     }}
                     className="action-button"
+                    title="حذف المحادثة"
                   >
                     <Trash2 className="icon" />
                   </button>
@@ -339,11 +376,13 @@ const MakkenyAIChat = () => {
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="اكتب رسالتك هنا..."
+              rows={1}
             />
             <button
               onClick={handleSend}
               disabled={!inputText.trim() || isLoading}
               className={`send-button ${!inputText.trim() || isLoading ? 'disabled' : ''}`}
+              title="إرسال الرسالة"
             >
               <Send className="icon" />
             </button>
