@@ -1,9 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Plus, MessageSquare, Settings, User, Bot, Menu, ChevronRight, ChevronLeft, Trash2, Edit3, Moon, Sun } from 'lucide-react';
 
-// OpenRouter API Key - ضع مفتاح API الخاص بك هنا
-const OPENROUTER_API_KEY = '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';
-
 const MakkenyAIChat = () => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -36,11 +33,17 @@ const MakkenyAIChat = () => {
 
   const callOpenRouterAPI = async (message) => {
     try {
+      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+      
+      if (!apiKey) {
+        throw new Error('OpenRouter API key not found. Please add VITE_OPENROUTER_API_KEY to your .env file.');
+      }
+
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'HTTP-Referer': window.location.origin,
           'X-Title': 'Makkeny AI Chat'
         },
@@ -75,6 +78,9 @@ const MakkenyAIChat = () => {
       return data.choices[0].message.content;
     } catch (error) {
       console.error('OpenRouter API Error:', error);
+      if (error.message.includes('API key not found')) {
+        return 'خطأ في التكوين: مفتاح API غير موجود. يرجى التحقق من إعدادات التطبيق.';
+      }
       return 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.';
     }
   };
