@@ -1,38 +1,14 @@
 /* Reset styles */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: 'Arial', sans-serif;
-    direction: rtl;
-  }
-  
-  /* CSS Variables for Light and Dark Mode */
-  :root {
-    --primary-color: rgba(13, 139, 113);
-    --primary-color-hover: #0a7a63;
-    --primary-color-light: rgba(9, 158, 125, 0.1);
-    --primary-color-border: rgba(9, 158, 125, 0.2);
-    --bg-color: #F9FAFB;
-    --card-bg: #FFFFFF;
-    --text: #1F2937;
-    --text-secondary: #6B7280;
-    --border: #E5E7EB;
-    --hover: #F3F4F6;
-    --input-bg: #FFFFFF;
-    --message-bg: #FFFFFF;
-  }
-  
-  .dark {
-    --bg-color: #1F2937;
-    --card-bg: #374151;
-    --text: #FFFFFF;
-    --text-secondary: #D1D5DB;
-    --border: #4B5563;
-    --hover: #4B5563;
-    --input-bg: #374151;
-    --message-bg: #374151;
-  }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Google Fonts Import - Must be at the top */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', 'Arial', sans-serif;
+  direction: rtl;
+}
