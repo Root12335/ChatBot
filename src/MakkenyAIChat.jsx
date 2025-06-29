@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Plus, MessageSquare, Settings, User, Bot, Menu, ChevronRight, ChevronLeft, Trash2, Edit3, Moon, Sun } from 'lucide-react';
+import { Send, Plus, MessageSquare, Settings, User, Bot, Menu, X, Trash2, Edit3, Moon, Sun, Sparkles, Zap, Coffee } from 'lucide-react';
 
 const MakkenyAIChat = () => {
   const [messages, setMessages] = useState([]);
@@ -8,9 +8,10 @@ const MakkenyAIChat = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [chatHistory, setChatHistory] = useState([
-    { id: 1, title: 'محادثة جديدة', messages: 0, active: true },
+    { id: 1, title: 'محادثة جديدة', messages: 0, active: true, timestamp: new Date() },
   ]);
   const [editingChat, setEditingChat] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -22,7 +23,6 @@ const MakkenyAIChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Apply dark mode to document
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -100,9 +100,13 @@ const MakkenyAIChat = () => {
     setInputText('');
     setIsLoading(true);
 
-    // Update chat history with message count
+    // Update chat history with message count and title
     setChatHistory(prev => prev.map(chat => 
-      chat.active ? { ...chat, messages: chat.messages + 1 } : chat
+      chat.active ? { 
+        ...chat, 
+        messages: chat.messages + 1,
+        title: chat.messages === 0 ? currentInput.slice(0, 30) + (currentInput.length > 30 ? '...' : '') : chat.title
+      } : chat
     ));
 
     try {
@@ -115,7 +119,6 @@ const MakkenyAIChat = () => {
       };
       setMessages(prev => [...prev, assistantMessage]);
       
-      // Update chat history with AI response count
       setChatHistory(prev => prev.map(chat => 
         chat.active ? { ...chat, messages: chat.messages + 1 } : chat
       ));
@@ -145,7 +148,8 @@ const MakkenyAIChat = () => {
       id: Date.now(),
       title: 'محادثة جديدة',
       messages: 0,
-      active: true
+      active: true,
+      timestamp: new Date()
     };
     setChatHistory(prev => [newChat, ...prev.map(chat => ({ ...chat, active: false }))]);
     setMessages([]);
@@ -163,12 +167,12 @@ const MakkenyAIChat = () => {
     setChatHistory(prev => {
       const filteredChats = prev.filter(chat => chat.id !== chatId);
       if (filteredChats.length === 0) {
-        // If no chats left, create a new one
         return [{
           id: Date.now(),
           title: 'محادثة جديدة',
           messages: 0,
-          active: true
+          active: true,
+          timestamp: new Date()
         }];
       }
       return filteredChats;
@@ -202,198 +206,273 @@ const MakkenyAIChat = () => {
     setDarkMode(!darkMode);
   };
 
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDate = (date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'اليوم';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'أمس';
+    } else {
+      return date.toLocaleDateString('ar-EG');
+    }
+  };
+
+  const quickPrompts = [
+    { icon: Sparkles, text: 'ساعدني في تطوير مهاراتي المهنية', color: 'from-purple-500 to-pink-500' },
+    { icon: Zap, text: 'أريد خطة تدريبية شخصية', color: 'from-blue-500 to-cyan-500' },
+    { icon: Coffee, text: 'نصائح لتحسين الإنتاجية', color: 'from-orange-500 to-red-500' }
+  ];
+
   return (
     <div className={`chat-container ${darkMode ? 'dark' : ''}`} dir="rtl">
+      {/* Sidebar */}
       <div className={`sidebar ${!sidebarOpen ? 'closed' : ''}`}>
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="sidebar-toggle"
-          title={sidebarOpen ? 'إغلاق الشريط الجانبي' : 'فتح الشريط الجانبي'}
-        >
-          {sidebarOpen ? <ChevronLeft className="icon" /> : <ChevronRight className="icon" />}
-          <span className="tooltip">{sidebarOpen ? 'إغلاق الشريط الجانبي' : 'فتح الشريط الجانبي'}</span>
-        </button>
-
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)}></div>
         <div className="sidebar-content">
-          <div className="header">
-            <div className="logo-container">
-              <div className="logo">
-                <Bot className="icon" />
+          {/* Header */}
+          <div className="sidebar-header">
+            <div className="logo-section">
+              <div className="logo-gradient">
+                <Bot className="logo-icon" />
               </div>
-              <span className="title">Makkeny AI</span>
+              <div className="logo-text">
+                <h1 className="app-title">Makkeny AI</h1>
+                <p className="app-subtitle">مساعدك الذكي</p>
+              </div>
             </div>
-            <button
-              onClick={toggleDarkMode}
-              className="theme-toggle"
-              title={darkMode ? 'الوضع النهاري' : 'الوضع الليلي'}
-            >
-              {darkMode ? <Sun className="icon sun" /> : <Moon className="icon moon" />}
+            <div className="header-actions">
+              <button onClick={toggleDarkMode} className="theme-toggle" title={darkMode ? 'الوضع النهاري' : 'الوضع الليلي'}>
+                {darkMode ? <Sun className="theme-icon" /> : <Moon className="theme-icon" />}
+              </button>
+              <button onClick={() => setSidebarOpen(false)} className="close-sidebar md:hidden">
+                <X className="close-icon" />
+              </button>
+            </div>
+          </div>
+
+          {/* New Chat Button */}
+          <div className="new-chat-section">
+            <button onClick={startNewChat} className="new-chat-btn">
+              <div className="new-chat-icon">
+                <Plus className="plus-icon" />
+              </div>
+              <span className="new-chat-text">محادثة جديدة</span>
+              <div className="new-chat-glow"></div>
             </button>
           </div>
 
-          <div className="new-chat">
-            <button onClick={startNewChat} className="new-chat-button">
-              <Plus className="icon" />
-              <span>محادثة جديدة</span>
-            </button>
-          </div>
-
+          {/* Chat History */}
           <div className="chat-history">
-            {chatHistory.map((chat) => (
-              <div
-                key={chat.id}
-                className={`chat-item ${chat.active ? 'active' : ''}`}
-                onClick={() => selectChat(chat.id)}
-              >
-                <MessageSquare className="icon" />
-                <div className="chat-info">
-                  {editingChat === chat.id ? (
-                    <input
-                      type="text"
-                      defaultValue={chat.title}
-                      className="chat-title-input"
-                      onBlur={(e) => finishEditingChat(chat.id, e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          finishEditingChat(chat.id, e.target.value);
-                        }
+            <div className="history-header">
+              <MessageSquare className="history-icon" />
+              <span className="history-title">المحادثات السابقة</span>
+            </div>
+            <div className="chat-list">
+              {chatHistory.map((chat) => (
+                <div
+                  key={chat.id}
+                  className={`chat-item ${chat.active ? 'active' : ''}`}
+                  onClick={() => selectChat(chat.id)}
+                >
+                  <div className="chat-item-content">
+                    <div className="chat-icon-wrapper">
+                      <MessageSquare className="chat-icon" />
+                    </div>
+                    <div className="chat-details">
+                      {editingChat === chat.id ? (
+                        <input
+                          type="text"
+                          defaultValue={chat.title}
+                          className="chat-title-input"
+                          onBlur={(e) => finishEditingChat(chat.id, e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              finishEditingChat(chat.id, e.target.value);
+                            }
+                          }}
+                          autoFocus
+                        />
+                      ) : (
+                        <>
+                          <div className="chat-title">{chat.title}</div>
+                          <div className="chat-meta">
+                            <span className="message-count">{chat.messages} رسالة</span>
+                            <span className="chat-date">{formatDate(chat.timestamp)}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="chat-actions">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEditingChat(chat.id);
                       }}
-                      autoFocus
-                    />
-                  ) : (
-                    <>
-                      <div className="chat-title">{chat.title}</div>
-                      <div className="chat-messages">{chat.messages} رسالة</div>
-                    </>
-                  )}
+                      className="action-btn edit-btn"
+                      title="تعديل العنوان"
+                    >
+                      <Edit3 className="action-icon" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteChat(chat.id);
+                      }}
+                      className="action-btn delete-btn"
+                      title="حذف المحادثة"
+                    >
+                      <Trash2 className="action-icon" />
+                    </button>
+                  </div>
                 </div>
-                <div className="chat-actions">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startEditingChat(chat.id);
-                    }}
-                    className="action-button"
-                    title="تعديل العنوان"
-                  >
-                    <Edit3 className="icon" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteChat(chat.id);
-                    }}
-                    className="action-button"
-                    title="حذف المحادثة"
-                  >
-                    <Trash2 className="icon" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
+          {/* User Section */}
           <div className="user-section">
-            <div className="user-info">
-              <div className="avatar">
-                <User className="icon" />
+            <div className="user-card" onClick={() => setShowSettings(!showSettings)}>
+              <div className="user-avatar">
+                <User className="user-icon" />
               </div>
-              <div className="user-details">
+              <div className="user-info">
                 <div className="user-name">المستخدم</div>
-                <div className="user-account">الحساب الشخصي</div>
+                <div className="user-status">متصل الآن</div>
               </div>
-              <Settings className="icon settings" />
+              <Settings className="settings-icon" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="chat-area">
-        <div className="header">
-          <div className="chat-header">
-            {!sidebarOpen && (
-              <button onClick={() => setSidebarOpen(true)} className="menu-button">
-                <Menu className="icon" />
-              </button>
-            )}
+      {/* Main Chat Area */}
+      <div className="chat-main">
+        {/* Header */}
+        <div className="chat-header">
+          <div className="header-left">
+            <button onClick={() => setSidebarOpen(true)} className="menu-btn">
+              <Menu className="menu-icon" />
+            </button>
             <div className="assistant-info">
-              <div className="avatar">
-                <Bot className="icon" />
+              <div className="assistant-avatar">
+                <Bot className="assistant-icon" />
+                <div className="status-indicator"></div>
               </div>
-              <div className="details">
-                <div className="assistant-name">Makkeny AI Assistant</div>
-                <div className="assistant-status">متصل الآن</div>
+              <div className="assistant-details">
+                <h2 className="assistant-name">Makkeny AI Assistant</h2>
+                <p className="assistant-status">متصل ومستعد للمساعدة</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="messages">
-          {messages.length === 0 && (
-            <div className="empty-chat">
-              <div className="avatar large">
-                <Bot className="icon" />
+        {/* Messages Area */}
+        <div className="messages-area">
+          {messages.length === 0 ? (
+            <div className="welcome-screen">
+              <div className="welcome-content">
+                <div className="welcome-avatar">
+                  <Bot className="welcome-icon" />
+                  <div className="avatar-glow"></div>
+                </div>
+                <h1 className="welcome-title">مرحباً بك في Makkeny AI</h1>
+                <p className="welcome-description">
+                  أنا مساعدك الذكي للتطوير المهني والتدريب. اختر من الاقتراحات أدناه أو اكتب سؤالك مباشرة
+                </p>
+                
+                <div className="quick-prompts">
+                  {quickPrompts.map((prompt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setInputText(prompt.text)}
+                      className="quick-prompt"
+                    >
+                      <div className={`prompt-icon bg-gradient-to-r ${prompt.color}`}>
+                        <prompt.icon className="prompt-icon-svg" />
+                      </div>
+                      <span className="prompt-text">{prompt.text}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <h3 className="welcome-message">مرحباً بك في Makkeny AI</h3>
-              <p className="welcome-text">
-                أنا مساعدك الذكي للتطوير المهني والتدريب. كيف يمكنني مساعدتك اليوم؟
+            </div>
+          ) : (
+            <div className="messages-list">
+              {messages.map((message, index) => (
+                <div key={message.id} className={`message ${message.type}`}>
+                  <div className="message-avatar">
+                    {message.type === 'user' ? (
+                      <User className="avatar-icon" />
+                    ) : (
+                      <Bot className="avatar-icon" />
+                    )}
+                  </div>
+                  <div className="message-content">
+                    <div className="message-bubble">
+                      <div className="message-text">{message.content}</div>
+                    </div>
+                    <div className="message-time">{formatTime(message.timestamp)}</div>
+                  </div>
+                </div>
+              ))}
+              
+              {isLoading && (
+                <div className="message assistant">
+                  <div className="message-avatar">
+                    <Bot className="avatar-icon" />
+                  </div>
+                  <div className="message-content">
+                    <div className="message-bubble loading">
+                      <div className="typing-indicator">
+                        <div className="typing-dot"></div>
+                        <div className="typing-dot"></div>
+                        <div className="typing-dot"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* Input Area */}
+        <div className="input-section">
+          <div className="input-wrapper">
+            <div className="input-container">
+              <textarea
+                ref={inputRef}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="اكتب رسالتك هنا..."
+                className="message-input"
+                rows={1}
+              />
+              <button
+                onClick={handleSend}
+                disabled={!inputText.trim() || isLoading}
+                className={`send-btn ${!inputText.trim() || isLoading ? 'disabled' : 'active'}`}
+              >
+                <Send className="send-icon" />
+                <div className="send-glow"></div>
+              </button>
+            </div>
+            <div className="input-footer">
+              <p className="disclaimer">
+                مساعد Makkeny الذكي مدعوم بـ OpenRouter. قد يرتكب أخطاء، تحقق من المعلومات المهمة.
               </p>
             </div>
-          )}
-
-          {messages.map((message) => (
-            <div key={message.id} className={`message ${message.type === 'user' ? 'user' : ''}`}>
-              <div className={`avatar ${message.type === 'user' ? 'user' : ''}`}>
-                {message.type === 'user' ? <User className="icon" /> : <Bot className="icon" />}
-              </div>
-              <div className="content-container">
-                <div className={`content ${message.type === 'user' ? 'user' : ''}`}>
-                  {message.content}
-                </div>
-                <div className="timestamp">
-                  {message.timestamp.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="message">
-              <div className="avatar">
-                <Bot className="icon" />
-              </div>
-              <div className="content-container">
-                <div className="content loading">
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="input-area">
-          <div className="input-container">
-            <textarea
-              ref={inputRef}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="اكتب رسالتك هنا..."
-              rows={1}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!inputText.trim() || isLoading}
-              className={`send-button ${!inputText.trim() || isLoading ? 'disabled' : ''}`}
-              title="إرسال الرسالة"
-            >
-              <Send className="icon" />
-            </button>
           </div>
-          <div className="footer">مساعد Makkeny الذكي مدعوم بـ OpenRouter. قد يرتكب أخطاء، تحقق من المعلومات المهمة.</div>
         </div>
       </div>
     </div>
